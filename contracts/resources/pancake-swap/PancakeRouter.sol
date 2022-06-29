@@ -53,7 +53,6 @@ contract PancakeRouter is IPancakeRouter02 {
             IPancakeFactory(factory).createPair(tokenA, tokenB);
         }
         (uint256 reserveA, uint256 reserveB) = PancakeLibrary.getReserves(factory, tokenA, tokenB);
-        console.log("res", reserveA);
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);
         } else {
@@ -99,11 +98,10 @@ contract PancakeRouter is IPancakeRouter02 {
             amountBMin
         );
         address pair = PancakeLibrary.pairFor(factory, tokenA, tokenB);
-        console.log(tokenA, msg.sender, pair);
+        console.log(amountA <= IERC20(tokenA).balanceOf(msg.sender));
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
+        console.log(amountB <= IERC20(tokenB).balanceOf(msg.sender));
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
-        console.log(IERC20(tokenB).balanceOf(pair));
-        console.log(amountA, "RRRRRR");
         liquidity = IPancakePair(pair).mint(to);
     }
 
@@ -321,6 +319,7 @@ contract PancakeRouter is IPancakeRouter02 {
             amounts[amounts.length - 1] >= amountOutMin,
             "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
+        console.log("swap322");
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -328,6 +327,7 @@ contract PancakeRouter is IPancakeRouter02 {
             amounts[0]
         );
         _swap(amounts, path, to);
+        console.log("swap");
     }
 
     function swapTokensForExactTokens(

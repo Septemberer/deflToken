@@ -12,12 +12,7 @@ const TWO = BigNumber.from(2);
 const ONE_TOKEN = BigNumber.from(10).pow(18);
 
 
-describe("CSFactory", function () {
-  let staking;
-  let crowdsale;
- 
-
-  let CrowdSale;
+describe("dfERC20", function () {
 
   let token;
   let dtoken;
@@ -55,31 +50,58 @@ describe("CSFactory", function () {
     await dtoken.deployed()
 
     await token.connect(minter).transfer(dev2.address, ONE_TOKEN.mul(2000))
+
+    await token.connect(dev2).transfer(dtoken.address, ONE_TOKEN.mul(1000))
+    await dtoken.connect(dev2).transfer(dtoken.address, ONE_TOKEN.mul(10000))
+
+    // await dtoken.connect(dev2).startLiquidity(ONE_TOKEN.mul(100), ONE_TOKEN.mul(100));
   })
 
   it("Should be deployed", async function () {
     expect(dtoken.address).to.be.properAddress
   })
 
-  it("Test swap", async function () {
-    
-    await token.connect(dev2).approve(router.address, ONE_TOKEN.mul(1000))
-    await dtoken.connect(dev2).approve(router.address, ONE_TOKEN.mul(1000))
-    console.log(await token.balanceOf(dev2.address))
-    console.log(await dtoken.balanceOf(dev2.address))
-    
-    console.log("тык")
+  it("Test small transfer (without liquidity)", async function () {
+    await dtoken.connect(dev2).transfer(alice.address, ONE_TOKEN.mul(2))
+    expect(await dtoken.balanceOf(alice.address)).to.be.equal(ONE_TOKEN.mul(2))
+  })
+
+  it("Test big transfer (with liquidity)", async function () {
+    let start_bal = await dtoken.totalSupply();
+    await token.connect(dev2).approve(router.address, ONE_TOKEN.mul(100))
+    await dtoken.connect(dev2).approve(router.address, ONE_TOKEN.mul(100))
+
     await router.connect(dev2).addLiquidity(
-        token.address,
-        dtoken.address,
-        ONE_TOKEN.mul(100),
-        ONE_TOKEN.mul(100),
-        0,
-        0,
-        dev2.address,
-        9999999999
+      token.address,
+      dtoken.address,
+      ONE_TOKEN.mul(100),
+      ONE_TOKEN.mul(100),
+      0,
+      0,
+      dev2.address,
+      9999999999
     );
-    console.log("тык")
-    await dtoken.transfer(alice.address, ONE_TOKEN.mul(100))
+
+    await dtoken.connect(dev2).transfer(alice.address, ONE_TOKEN.mul(100))
+    await dtoken.connect(dev2).transfer(dev.address, ONE_TOKEN.mul(1000))
+
+    await dtoken.connect(dev2).transfer(dev.address, ONE_TOKEN.mul(1000))
+    await dtoken.connect(dev2).transfer(dev.address, ONE_TOKEN.mul(1000))
+
+    await dtoken.connect(dev2).transfer(dev.address, ONE_TOKEN.mul(1000))
+    await dtoken.connect(dev2).transfer(dev.address, ONE_TOKEN.mul(1000))
+    await dtoken.connect(dev2).transfer(dev.address, ONE_TOKEN.mul(1000))
+
+    let end_bal = await dtoken.totalSupply();
+    expect(await dtoken.balanceOf(alice.address)).to.be.equal(ONE_TOKEN.mul(100))
+    expect(await dtoken.balanceOf(dev.address)).to.be.equal(ONE_TOKEN.mul(6000))
+
+    await dtoken.connect(dev).transfer(alice.address, ONE_TOKEN.mul(5000))
+
+    expect(await dtoken.balanceOf(alice.address)).to.be.equal(ONE_TOKEN.mul(5000).mul(95).div(100).add(ONE_TOKEN.mul(100)))
+
+    expect(await dtoken.balanceOf(dev.address)).to.be.equal(ONE_TOKEN.mul(1000))
+
+    expect(start_bal >= end_bal).to.be.true;
   })
 }) 

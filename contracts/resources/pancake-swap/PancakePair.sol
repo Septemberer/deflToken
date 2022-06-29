@@ -130,15 +130,12 @@ contract PancakePair is IPancakePair, PancakeERC20 {
     function mint(address to) external override lock returns (uint256 liquidity) {
         (uint112 _reserve0, uint112 _reserve1, ) = getReserves(); // gas savings
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
-        console.log(balance0, "67EEE");
         uint256 balance1 = IERC20(token1).balanceOf(address(this));
         uint256 amount0 = balance0 - _reserve0;
         uint256 amount1 = balance1 - _reserve1;
         bool feeOn = _mintFee(_reserve0, _reserve1);
         uint256 _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
-        console.log(_totalSupply, "EEE");
         if (_totalSupply == 0) {
-            console.log(amount0, amount1, "EE");
             liquidity = Math.sqrt(amount0 * amount1) - MINIMUM_LIQUIDITY;
             _mint(address(0), MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
         } else {
