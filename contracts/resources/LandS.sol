@@ -3,15 +3,10 @@
 pragma solidity ^0.8.0;
 
 import "./pancake-swap/interfaces/IPancakeRouter02.sol";
-import "./pancake-swap/interfaces/IPancakePair.sol";
-import "./pancake-swap/interfaces/IPancakeFactory.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
-import "hardhat/console.sol";
 
 contract LandS is Ownable {
     using Address for address;

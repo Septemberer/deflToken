@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import "./resources/pancake-swap/interfaces/IPancakeRouter02.sol";
-import "./resources/pancake-swap/interfaces/IPancakePair.sol";
 import "./resources/pancake-swap/interfaces/IPancakeFactory.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -116,7 +115,12 @@ contract dfERC20 is ERC20, Ownable {
             "ERC20: transfer amount exceeds balance"
         );
 
-        if (!_withoutFee[from] && !_withoutFee[to] && !inSwapAndLiquify && LandSAdded) {
+        if (
+            !_withoutFee[from] &&
+            !_withoutFee[to] &&
+            !inSwapAndLiquify &&
+            LandSAdded
+        ) {
             require(liq.getStart(), "not started");
             uint256 taxFee = calculateTaxFee(amount);
             uint256 liqFee = calculateLiquidityFee(amount);
