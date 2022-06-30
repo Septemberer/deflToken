@@ -28,7 +28,7 @@ describe("dfERC20", function () {
 
   beforeEach(async function () {
     [alice, dev2, dev, minter] = await ethers.getSigners()
-    const Token = await ethers.getContractFactory("MockERC20", minter)
+    const Token = await ethers.getContractFactory("LToken", minter)
     const DToken = await ethers.getContractFactory("dfERC20", dev2)
     const WETH = await ethers.getContractFactory("WETH")
     const PancakeFactory = await ethers.getContractFactory("PancakeFactory")
@@ -44,7 +44,7 @@ describe("dfERC20", function () {
     await router.connect(dev2).deployed()
 
 
-    token = await Token.deploy('LToken', 'LiqT', ONE_TOKEN.mul(100000))
+    token = await Token.deploy(ONE_TOKEN.mul(100000))
     dtoken = await DToken.deploy(token.address, router.address)
 
     await token.deployed()
