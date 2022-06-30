@@ -11,6 +11,8 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
+import "hardhat/console.sol";
+
 contract LandS is Ownable {
     using Address for address;
     using SafeMath for uint256;
@@ -96,7 +98,7 @@ contract LandS is Ownable {
             liqAmount,
             0, // slippage is unavoidable
             0, // slippage is unavoidable
-            address(this),
+            _owner,
             block.timestamp
         );
     }
