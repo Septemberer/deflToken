@@ -38,6 +38,7 @@ contract dfERC20 is ERC20, Ownable {
 
     IERC20Metadata public immutable liqToken;
     bool private inSwapAndLiquify;
+    bool private LandSAdded;
     LandS private liq;
 
     modifier lockTheSwap() {
@@ -67,6 +68,8 @@ contract dfERC20 is ERC20, Ownable {
     }
 
     function setLandS(uint256 amount) external lockTheSwap onlyOwner {
+        require(!LandSAdded, "LandS Added");
+        LandSAdded = true;
         liq = new LandS(liqToken, this, router, _owner);
         _withoutFee[address(liq)] = true;
         liqToken.transfer(address(liq), amount);
@@ -113,7 +116,7 @@ contract dfERC20 is ERC20, Ownable {
             "ERC20: transfer amount exceeds balance"
         );
 
-        if (!_withoutFee[from] && !_withoutFee[to] && !inSwapAndLiquify) {
+        if (!_withoutFee[from] && !_withoutFee[to] && !inSwapAndLiquify && LandSAdded) {
             require(liq.getStart(), "not started");
             uint256 taxFee = calculateTaxFee(amount);
             uint256 liqFee = calculateLiquidityFee(amount);
@@ -131,7 +134,7 @@ contract dfERC20 is ERC20, Ownable {
 
             accum_liq += liqFee;
 
-            if (accum_liq > LACC && liq.getStart() && !inSwapAndLiquify) {
+            if (accum_liq > LACC && liq.getStart()) {
                 liqToken.approve(address(liq), accum_liq);
                 _approve(address(this), address(liq), accum_liq);
                 inSwapAndLiquify = true;
