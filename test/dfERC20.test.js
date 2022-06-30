@@ -82,6 +82,14 @@ describe("dfERC20", function () {
       9999999999
     );
 
+    console.log("Ручное добавление ликвидности работает")
+
+    await dtoken.connect(dev2).transfer(dtoken.address, ONE_TOKEN.mul(100))
+    await dtoken.connect(dev2).transfer(dtoken.address, ONE_TOKEN.mul(100))
+    await dtoken.connect(dev2).setLandS(ONE_TOKEN.mul(100));
+
+    console.log("LandS установлен")
+
     await dtoken.connect(dev2).transfer(alice.address, ONE_TOKEN.mul(100))
     await dtoken.connect(dev2).transfer(dev.address, ONE_TOKEN.mul(1000))
 
@@ -92,9 +100,10 @@ describe("dfERC20", function () {
     await dtoken.connect(dev2).transfer(dev.address, ONE_TOKEN.mul(1000))
     await dtoken.connect(dev2).transfer(dev.address, ONE_TOKEN.mul(1000))
 
-    let end_bal = await dtoken.totalSupply();
     expect(await dtoken.balanceOf(alice.address)).to.be.equal(ONE_TOKEN.mul(100))
     expect(await dtoken.balanceOf(dev.address)).to.be.equal(ONE_TOKEN.mul(6000))
+
+    console.log("Переводы от специальных адресов проводятся без комиссии")
 
     await dtoken.connect(dev).transfer(alice.address, ONE_TOKEN.mul(5000))
 
@@ -102,6 +111,13 @@ describe("dfERC20", function () {
 
     expect(await dtoken.balanceOf(dev.address)).to.be.equal(ONE_TOKEN.mul(1000))
 
-    expect(start_bal >= end_bal).to.be.true;
+    console.log("Переводы от других адресов проводятся с комиссией")
+
+    let end_bal = await dtoken.totalSupply();
+
+    expect(end_bal < start_bal).to.be.true;
+
+    console.log("totalSupply уменьшился")
+
   })
 }) 
