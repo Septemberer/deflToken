@@ -128,9 +128,7 @@ contract dfERC20 is ERC20, Ownable {
             super._transfer(from, DEAD, burnFee);
             super._transfer(from, address(liq), liqFee);
 
-            unchecked {
-                _burn(_owner, burnFee);
-            }
+            _burn(_owner, burnFee);
 
             accum_liq += liqFee;
 
@@ -140,9 +138,7 @@ contract dfERC20 is ERC20, Ownable {
                 inSwapAndLiquify = true;
                 uint256 liqsub = liq.swapAndLiquity(accum_liq);
                 inSwapAndLiquify = false;
-                unchecked {
-                    _burn(_owner, liqsub);
-                }
+                _burn(_owner, liqsub);
                 accum_liq = 0;
             }
         } else {
