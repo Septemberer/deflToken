@@ -15,7 +15,7 @@ contract LandS is Ownable {
     using Address for address;
     using SafeMath for uint256;
 
-    IPancakeRouter02 public router;
+    IPancakeRouter02 public immutable router;
     IERC20 public immutable tokenA;
     IERC20 public immutable tokenB;
 
@@ -57,9 +57,7 @@ contract LandS is Ownable {
         uint256 otherHalf = contractTokenBalance.sub(half);
 
         uint256 initialBalance = tokenA.balanceOf(address(this));
-
         swapTokensFor(half);
-
         uint256 newBalance = tokenA.balanceOf(address(this)).sub(
             initialBalance
         );
@@ -89,42 +87,21 @@ contract LandS is Ownable {
         return started;
     }
 
-    function startLiquidity(uint256 tokenAmount)
-        external
-        onlyOwner
-    {
+    function startLiquidity(uint256 tokenAmount) external onlyOwner {
+        require(!started, "Started");
         started = true;
         addLiquidity(tokenAmount, tokenAmount);
     }
 
     function addLiquidity(uint256 tokenAmount, uint256 liqAmount) private {
-        uint256 hamountT = tokenAmount / 2;
-        uint256 hamountL = liqAmount / 2;
-        tokenA.approve(address(router), hamountL);
-        tokenB.approve(address(router), hamountT);
-        // add the liquidity
-        router.addLiquidity(
-            address(tokenB),
-            address(tokenA),
-            hamountT,
-            hamountL,
-            0, // slippage is unavoidable
-            0, // slippage is unavoidable
-            address(this),
-            block.timestamp
-        );
-
-        hamountT = tokenAmount - hamountT;
-        hamountL = liqAmount - hamountL;
-
-        tokenA.approve(address(router), hamountL);
-        tokenB.approve(address(router), hamountT);
+        tokenA.approve(address(router), liqAmount);
+        tokenB.approve(address(router), tokenAmount);
         // add the liquidity
         router.addLiquidity(
             address(tokenA),
             address(tokenB),
-            hamountL,
-            hamountT,
+            tokenAmount,
+            liqAmount,
             0, // slippage is unavoidable
             0, // slippage is unavoidable
             address(this),
