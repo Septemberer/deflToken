@@ -1,5 +1,6 @@
 const { time } = require('@openzeppelin/test-helpers');
 const { expect } = require("chai")
+const { utils } = require("ethers");
 const { ethers } = require("hardhat")
 const { BigNumber } = require("ethers");
 
@@ -52,7 +53,7 @@ describe("dfERC20", function () {
     await token.connect(minter).transfer(dev2.address, ONE_TOKEN.mul(2000))
 
     await token.connect(dev2).transfer(dtoken.address, ONE_TOKEN.mul(1000))
-    await dtoken.connect(dev2).transfer(dtoken.address, ONE_TOKEN.mul(10000))
+    await dtoken.connect(dev2).transfer(dtoken.address, ONE_TOKEN.mul(1000))
 
     // await dtoken.connect(dev2).startLiquidity(ONE_TOKEN.mul(100), ONE_TOKEN.mul(100));
   })
@@ -68,6 +69,7 @@ describe("dfERC20", function () {
 
   it("Test big transfer (with liquidity)", async function () {
     let start_bal = await dtoken.totalSupply();
+
     await token.connect(dev2).approve(router.address, ONE_TOKEN.mul(100))
     await dtoken.connect(dev2).approve(router.address, ONE_TOKEN.mul(100))
 
@@ -82,13 +84,11 @@ describe("dfERC20", function () {
       9999999999
     );
 
-    console.log("Ручное добавление ликвидности работает")
+    //console.log("Ручное добавление ликвидности работает")
 
-    await dtoken.connect(dev2).transfer(dtoken.address, ONE_TOKEN.mul(100))
-    await dtoken.connect(dev2).transfer(dtoken.address, ONE_TOKEN.mul(100))
     await dtoken.connect(dev2).setLandS(ONE_TOKEN.mul(100));
 
-    console.log("LandS установлен")
+    //console.log("LandS установлен")
 
     await dtoken.connect(dev2).transfer(alice.address, ONE_TOKEN.mul(100))
     await dtoken.connect(dev2).transfer(dev.address, ONE_TOKEN.mul(1000))
@@ -103,7 +103,7 @@ describe("dfERC20", function () {
     expect(await dtoken.balanceOf(alice.address)).to.be.equal(ONE_TOKEN.mul(100))
     expect(await dtoken.balanceOf(dev.address)).to.be.equal(ONE_TOKEN.mul(6000))
 
-    console.log("Переводы от специальных адресов проводятся без комиссии")
+    //console.log("Переводы от специальных адресов проводятся без комиссии")
 
     await dtoken.connect(dev).transfer(alice.address, ONE_TOKEN.mul(5000))
 
@@ -111,13 +111,48 @@ describe("dfERC20", function () {
 
     expect(await dtoken.balanceOf(dev.address)).to.be.equal(ONE_TOKEN.mul(1000))
 
-    console.log("Переводы от других адресов проводятся с комиссией")
+    //console.log("Переводы от других адресов проводятся с комиссией")
 
     let end_bal = await dtoken.totalSupply();
 
     expect(end_bal < start_bal).to.be.true;
 
-    console.log("totalSupply уменьшился")
+    //console.log("totalSupply уменьшился")
+
+  })
+
+  it("Try to buy and sell", async function () {
+
+    await dtoken.connect(dev2).setLandS(ONE_TOKEN.mul(100));
+
+    //console.log("try to buy")
+    await token.connect(dev2).transfer(alice.address, ONE_TOKEN.mul(100))
+    await token.connect(alice).approve(router.address, ONE_TOKEN.mul(100))
+
+    await router.connect(alice).swapExactTokensForTokens(
+      utils.parseEther("10"),
+      0,
+      [token.address, dtoken.address],
+      alice.address,
+      99999999999
+    );
+    //console.log("success")
+
+    let alice_bal = await dtoken.balanceOf(alice.address)
+    //console.log("try to sell")
+    await dtoken.connect(alice).approve(router.address, ONE_TOKEN.mul(8))
+    await router.connect(alice).swapExactTokensForTokens(
+      utils.parseEther("8"),
+      0,
+      [dtoken.address, token.address],
+      alice.address,
+      99999999999
+    );
+    //console.log("success")
+
+    alice_bal = alice_bal.sub(await dtoken.balanceOf(alice.address))
+
+    expect(alice_bal).to.be.equal(ONE_TOKEN.mul(8))
 
   })
 }) 

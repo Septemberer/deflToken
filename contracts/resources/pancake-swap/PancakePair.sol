@@ -191,11 +191,14 @@ contract PancakePair is IPancakePair, PancakeERC20 {
 
         uint256 balance0;
         uint256 balance1;
+        balance0 = IERC20(token0).balanceOf(address(this));
+        balance1 = IERC20(token1).balanceOf(address(this));
         {
             // scope for _token{0,1}, avoids stack too deep errors
             address _token0 = token0;
             address _token1 = token1;
             require(to != _token0 && to != _token1, "Pancake: INVALID_TO");
+
             if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
             if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
             if (data.length > 0)

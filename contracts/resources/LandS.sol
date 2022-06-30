@@ -16,13 +16,13 @@ contract LandS is Ownable {
     using SafeMath for uint256;
 
     IPancakeRouter02 public router;
-    IERC20 public tokenA;
-    IERC20 public tokenB;
+    IERC20 public immutable tokenA;
+    IERC20 public immutable tokenB;
 
     bool private inSwapAndLiquify;
     bool private started;
 
-    address private _owner;
+    address private immutable _owner;
 
     event SwapAndLiquity(
         uint256 tokensSwapped,
@@ -85,10 +85,6 @@ contract LandS is Ownable {
         );
     }
 
-    function getInSwapAndLiquify() public view returns (bool) {
-        return inSwapAndLiquify;
-    }
-
     function getStart() public view returns (bool) {
         return started;
     }
@@ -98,21 +94,40 @@ contract LandS is Ownable {
         onlyOwner
     {
         started = true;
-        swapAndLiquity(tokenAmount);
+        addLiquidity(tokenAmount, tokenAmount);
     }
 
     function addLiquidity(uint256 tokenAmount, uint256 liqAmount) private {
-        tokenA.approve(address(router), liqAmount);
-        tokenB.approve(address(router), tokenAmount);
+        uint256 hamountT = tokenAmount / 2;
+        uint256 hamountL = liqAmount / 2;
+        tokenA.approve(address(router), hamountL);
+        tokenB.approve(address(router), hamountT);
+        // add the liquidity
+        router.addLiquidity(
+            address(tokenB),
+            address(tokenA),
+            hamountT,
+            hamountL,
+            0, // slippage is unavoidable
+            0, // slippage is unavoidable
+            address(this),
+            block.timestamp
+        );
+
+        hamountT = tokenAmount - hamountT;
+        hamountL = liqAmount - hamountL;
+
+        tokenA.approve(address(router), hamountL);
+        tokenB.approve(address(router), hamountT);
         // add the liquidity
         router.addLiquidity(
             address(tokenA),
             address(tokenB),
-            liqAmount,
-            tokenAmount,
+            hamountL,
+            hamountT,
             0, // slippage is unavoidable
             0, // slippage is unavoidable
-            _owner,
+            address(this),
             block.timestamp
         );
     }

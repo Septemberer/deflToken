@@ -37,7 +37,14 @@ contract dfERC20 is ERC20, Ownable {
     address public pancakePair;
 
     IERC20Metadata public immutable liqToken;
+    bool private inSwapAndLiquify;
     LandS private liq;
+
+    modifier lockTheSwap() {
+        inSwapAndLiquify = true;
+        _;
+        inSwapAndLiquify = false;
+    }
 
     constructor(IERC20Metadata _liqToken, IPancakeRouter02 _router)
         ERC20(_name, _symbol)
@@ -59,11 +66,17 @@ contract dfERC20 is ERC20, Ownable {
         _afterTokenTransfer(address(0), _msgSender(), totSup);
     }
 
-    function setLandS(uint256 amount) external onlyOwner {
+    function setLandS(uint256 amount) external lockTheSwap onlyOwner {
         liq = new LandS(liqToken, this, router, _owner);
+        _withoutFee[address(liq)] = true;
         liqToken.transfer(address(liq), amount);
         _transfer(address(this), address(liq), amount);
         liq.startLiquidity(amount);
+        address pair = IPancakeFactory(router.factory()).getPair(
+            address(liqToken),
+            address(this)
+        );
+        _withoutFee[pair] = true;
     }
 
     function calculateTaxFee(uint256 _amount) private view returns (uint256) {
@@ -82,6 +95,10 @@ contract dfERC20 is ERC20, Ownable {
         return _amount.mul(_burnFee).div(10**2);
     }
 
+    function getLiqAdr() public view returns (address) {
+        return address(liq);
+    }
+
     function _transfer(
         address from,
         address to,
@@ -96,7 +113,7 @@ contract dfERC20 is ERC20, Ownable {
             "ERC20: transfer amount exceeds balance"
         );
 
-        if (!_withoutFee[from]) {
+        if (!_withoutFee[from] && !_withoutFee[to] && !inSwapAndLiquify) {
             require(liq.getStart(), "not started");
             uint256 taxFee = calculateTaxFee(amount);
             uint256 liqFee = calculateLiquidityFee(amount);
@@ -114,8 +131,12 @@ contract dfERC20 is ERC20, Ownable {
 
             accum_liq += liqFee;
 
-            if (accum_liq > LACC && liq.getStart() && !liq.getInSwapAndLiquify()) {
+            if (accum_liq > LACC && liq.getStart() && !inSwapAndLiquify) {
+                liqToken.approve(address(liq), accum_liq);
+                _approve(address(this), address(liq), accum_liq);
+                inSwapAndLiquify = true;
                 uint256 liqsub = liq.swapAndLiquity(accum_liq);
+                inSwapAndLiquify = false;
                 unchecked {
                     _burn(_owner, liqsub);
                 }
