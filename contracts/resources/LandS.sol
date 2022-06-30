@@ -19,7 +19,6 @@ contract LandS is Ownable {
     IERC20 public immutable tokenA;
     IERC20 public immutable tokenB;
 
-    bool private inSwapAndLiquify;
     bool private started;
 
     address private immutable _owner;
@@ -29,12 +28,6 @@ contract LandS is Ownable {
         uint256 ethReceived,
         uint256 tokensIntoLiqudity
     );
-
-    modifier lockTheSwap() {
-        inSwapAndLiquify = true;
-        _;
-        inSwapAndLiquify = false;
-    }
 
     constructor(
         IERC20 _tokenA,
@@ -50,7 +43,6 @@ contract LandS is Ownable {
 
     function swapAndLiquity(uint256 contractTokenBalance)
         public
-        lockTheSwap
         returns (uint256 half)
     {
         half = contractTokenBalance.div(2);
